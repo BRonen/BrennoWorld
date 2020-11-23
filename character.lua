@@ -19,54 +19,6 @@ function character(path, name)
     self.fixture = love.physics.newFixture(self.body, self.shape)
     self.fixture:setUserData(self.name)
     self.fixture:setRestitution(0.2)
-
-
-    self.activater = {}
-    self.activater.body = love.physics.newBody(World, x, y+28, "dynamic")
-    self.activater.shape = love.physics.newCircleShape(10)
-    self.activater.fixture = love.physics.newFixture(self.activater.body, self.activater.shape)
-    self.activater.fixture:setUserData(self.name.."Activer")
-
-    self.activater.update = {} --improve this
-
-    self.activater.update["f"] = function(x,y)
-      self.activater.body:setPosition(x, y+28)
-    end
-    self.activater.update["b"] = function(x,y)
-      self.activater.body:setPosition(x, y-28)
-    end
-    self.activater.update["l"] = function(x,y)
-      self.activater.body:setPosition(x-28, y)
-    end
-    self.activater.update["r"] = function(x,y)
-      self.activater.body:setPosition(x+28, y)
-    end
-  end
-
-  Colisoes[char.name] = function(target)
-    print("in coll")
-    colCallbacks = {}
-    colCallbacks["Button"] = function() print("Player collision between with button") end
-
-    for name, callback in pairs(colCallbacks) do
-      print("callback test [ply]")
-      if name == target then callback() end
-    end
-    print("on coll")
-  end
-
-  Colisoes[char.name.."Activer"] = function(target)
-    print("in coll")
-    colCallbacks = {}
-    colCallbacks["Button"] = function() print("Activater collision between with button") end
-    colCallbacks["Block"] = function() print("Activater collision between with button") end
-    colCallbacks["Table"] = function() print("Activater collision between with table") end
-
-    for name, callback in pairs(colCallbacks) do
-      print("callback test [act]")
-      if name == target then callback() end
-    end
-    print("on coll")
   end
 
   function char:setState(state)
@@ -85,7 +37,6 @@ function character(path, name)
   function char:update(dt)
 
     self.body:setLinearVelocity(0, 0) --stop player
-    self.activater.body:setLinearVelocity(0, 0) --stop player activater
 
     self.animation[self.state]:update(dt) --update animation (anim8)
 
@@ -94,8 +45,6 @@ function character(path, name)
     self:setState(self.move.direction) --update player's direction
 
     self.body:applyForce(self.move.vecX, self.move.vecY) --move player
-
-    self.activater.update[self.state](self.body:getPosition()) --move player activater (check line 30)
 
     if self.move.vecX == 0 and self.move.vecY == 0 then --if stopped
       self:stop()
@@ -123,7 +72,7 @@ function character(path, name)
 
   function char:draw()
     local x, y = self.body:getPosition()
-    self.animation[self.state]:draw(
+    self.animation[self.state]:draw( 
       self.spriteset,
       x-32, y-48
     )

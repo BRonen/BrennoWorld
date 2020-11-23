@@ -5,64 +5,33 @@ function map:new(path)
   if World then World:destroy() end
   World = love.physics.newWorld()
 
-  local tileString, quadInfo, especialsInfo = love.filesystem.load(path)()
-  self.Tileset = love.graphics.newImage(quadInfo.path)
-  local tilesetW, tilesetH = self.Tileset:getWidth(), self.Tileset:getHeight()
-  self.Quads, Statics.blocks = {}, {}
-
-  for _,info in ipairs(quadInfo) do
-    -- info[1] = the character, info[2] = x, info[3] = y
-    self.Quads[info[1]] = love.graphics.newQuad(
-      info[2], info[3],
-      TileW,  TileH,
-      tilesetW, tilesetH
-    )--piece by piece in "dictionary"
-  end
-
-  self.TileTable = {}
-
-  local lineWidth = #(tileString:match("[^\n]+"))
-
-  for x = 1,lineWidth,1 do self.TileTable[x] = {} end
-
-  local rowIndex,columnIndex = 1,1
-  for row in tileString:gmatch("[^\n]+") do --for row in tile string
-    assert(#row == lineWidth, 'Map is not aligned: width of row ' .. --test if map is formatted
-      tostring(rowIndex) .. ' should be ' .. tostring(lineWidth) ..
-      ', but it is ' .. tostring(#row)
-    ) --test if map is formatted
-    columnIndex = 1
-
-    for character in row:gmatch(".") do --for character in row
-      if character ~= "/" then
-        self.TileTable[columnIndex][rowIndex] = character --set tiles into tile table
-        columnIndex = columnIndex + 1
-
-        if especialsInfo[character] then --if has especial properties
-          especialsInfo[character](rowIndex, columnIndex)
-        end
-      end
-
-    end --for character in row
-
-    rowIndex=rowIndex+1
-  end --for row in tile string
-
+  self.tileTable, self.tileSet, self.quads, self.lineWidth = love.filesystem.load(path)()
+  
+  print(#self.tileTable)
   map.canvas = love.graphics.newCanvas(
-    (#(self.TileTable))*TileH,
-    (#(self.TileTable[1]))*TileW
+    (#self.tileTable/(self.lineWidth/3))*TileH,
+    (self.lineWidth)*TileW
   )
   love.window.setMode(800, 600)
 
   map.canvas:renderTo(function()
-    for x,column in ipairs(self.TileTable) do
-      for y,char in ipairs(column) do
+  
+    for i=1,#self.tileTable do
+      local tile = self.tileTable[i]
+      
+      if tile ~= "/" then
+        local x = math.floor(i%(self.lineWidth))
+        local y = math.floor(i/(self.lineWidth))
+
+        print("'"..self.tileTable[i].."'")
+
         love.graphics.draw(
-          self.Tileset, self.Quads[ char ],
+          self.tileSet, self.quads[tile],
           (x-1)*TileW, (y-1)*TileH
         )
       end
     end
+    
   end) --set render function to canvas
 
   map.canvasImg = love.graphics.newImage(
@@ -81,7 +50,7 @@ function map:drawMinimap()
     16--minimap height
   )
 
-  --minimap width + playerX/10, minimap height + playerY/10
+  --minimap width + playerX/10, minimap height + playerY/10 
   local px, py = x+player.body:getX()/10, y+player.body:getY()/10
 
   love.graphics.draw(
